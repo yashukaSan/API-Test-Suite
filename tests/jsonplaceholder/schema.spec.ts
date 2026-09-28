@@ -17,7 +17,7 @@ test.describe("Validating API responses", ()=>{
 
         expect(isValid, `Schema error: ${JSON.stringify(validateAll.errors, null, 2)}`).toBe(true);
     });
-    test.describe('API Response for IDs', ()=>{
+    test.describe('API Response for Valid IDs', ()=>{
         for(let i=0; i<5; i++){
             test(`API response checking - #${i}`, async({request})=>{
                 const res = await request.get(`https://jsonplaceholder.typicode.com/posts/${Math.floor(Math.random() * 100)}`);
@@ -30,4 +30,40 @@ test.describe("Validating API responses", ()=>{
             });
         } 
     });
+    //test cases for the non numberic IDs
+    test.describe("API response for Invalid IDs", ()=> {
+        const invalid_id = ["abc", "q1", "12b", "3", "xyz"];
+        for(let i=0; i<5; i++ ){
+            test(`API call on invalid ID #${i+1} `, async({ request })=> {
+                const res= await request.get(`https://jsonplaceholder.typicode.com/posts/${invalid_id[i]}`);
+                if(i==3) expect(res.status()).toBe(200);
+                else expect(res.status()).toBe(404);
+            })
+        }
+    });
+
+    //test for the non-negative IDs
+    test.describe("API for the negative IDs ", ()=>{
+        for(let i=0; i<5; i++){
+            test(`API call on non-negative ID #${i}`, async({request})=>{
+                const res= await request.get(`https://jsonplaceholder.typicode.com/posts/-${Math.floor(Math.random() * 100)}`);
+                expect(res.status()).toBe(404);
+            })
+        }
+    });
+
+    test('API call on ID 0', async({request})=>{
+        const res = await request.get('https://jsonplaceholder.typicode.com/posts/0');
+        expect(res.status()).toBe(404);
+    });
+
+    test.describe('API call on out-of-bound IDs', ()=>{
+        
+        for(let i=0; i<10; i++){
+            test(`Call #${i+1}`, async({request})=>{
+                const res = await request.get(`https://jsonplaceholder.typicode.com/posts/${Math.floor((Math.random()*100)+100 )}`);
+                expect(res.status()).toBe(404);
+            })
+        }
+    })
 })
