@@ -2,16 +2,43 @@
   "name": "test-suite",
   "version": "1.0.0",
   "description": "tests on some APIs",
+  "homepage": "https://github.com/yashukaSan/API-Test-Suite#readme",
+  "bugs": {
+    "url": "https://github.com/yashukaSan/API-Test-Suite/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yashukaSan/API-Test-Suite.git"
+  },
   "license": "ISC",
-  "author": "Yogesh Sahu",
+  "author": {
+    "name": "Yogesh Sahu"
+  },
   "type": "commonjs",
-  "main": "index.js",
+  "main": "./lib/index.js",
+  "directories": {
+    "test": "tests"
+  },
   "scripts": {
-    "test": "npx playwright test"
+    "test": "npx playwright test",
+    "build": "tsc",
+    "lint": "tslint -c tslint.json src/**/*.ts",
+    "prepublish": "npm run build"
+  },
+  "dependencies": {
+    "playwright": "^1.63.0",
+    "playwright-core": "^1.63.0",
+    "tslint": "^5.20.1",
+    "undici-types": "^8.9.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.3",
     "typescript": "^7.0.2"
-  }
+  },
+  "files": [
+    "./bin/*",
+    "./lib/*"
+  ],
+  "typings": "./lib/index.d.ts"
 }
