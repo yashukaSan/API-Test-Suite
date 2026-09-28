@@ -1,0 +1,17 @@
+{
+  "name": "test-suite",
+  "version": "1.0.0",
+  "description": "tests on some APIs",
+  "license": "ISC",
+  "author": "Yogesh Sahu",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.3",
+    "typescript": "^7.0.2"
+  }
+}
