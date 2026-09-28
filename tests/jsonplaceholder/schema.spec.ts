@@ -19,7 +19,7 @@ test.describe("Validating API responses", ()=>{
     });
     test.describe('API Response for Valid IDs', ()=>{
         for(let i=0; i<5; i++){
-            test(`API response checking - #${i}`, async({request})=>{
+            test(`Valid ID #${i}`, async({request})=>{
                 const res = await request.get(`https://jsonplaceholder.typicode.com/posts/${Math.floor(Math.random() * 100)}`);
                 expect(res.status()).toBe(200);
 
@@ -34,7 +34,7 @@ test.describe("Validating API responses", ()=>{
     test.describe("API response for Invalid IDs", ()=> {
         const invalid_id = ["abc", "q1", "12b", "3", "xyz"];
         for(let i=0; i<5; i++ ){
-            test(`API call on invalid ID #${i+1} `, async({ request })=> {
+            test(`Invalid ID #${i+1} `, async({ request })=> {
                 const res= await request.get(`https://jsonplaceholder.typicode.com/posts/${invalid_id[i]}`);
                 if(i==3) expect(res.status()).toBe(200);
                 else expect(res.status()).toBe(404);
@@ -45,7 +45,7 @@ test.describe("Validating API responses", ()=>{
     //test for the non-negative IDs
     test.describe("API for the negative IDs ", ()=>{
         for(let i=0; i<5; i++){
-            test(`API call on non-negative ID #${i}`, async({request})=>{
+            test(`Negative ID #${i}`, async({request})=>{
                 const res= await request.get(`https://jsonplaceholder.typicode.com/posts/-${Math.floor(Math.random() * 100)}`);
                 expect(res.status()).toBe(404);
             })
@@ -60,7 +60,7 @@ test.describe("Validating API responses", ()=>{
     test.describe('API call on out-of-bound IDs', ()=>{
         
         for(let i=0; i<10; i++){
-            test(`Call #${i+1}`, async({request})=>{
+            test(`Out-of-Bound #${i+1}`, async({request})=>{
                 const res = await request.get(`https://jsonplaceholder.typicode.com/posts/${Math.floor((Math.random()*100)+100 )}`);
                 expect(res.status()).toBe(404);
             })
