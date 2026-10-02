@@ -1,0 +1,20 @@
+{
+    "type": "object",
+    "properties": {
+        "albumId": {
+            "type": "number"
+        },
+        "id": {
+            "type": "number"
+        },
+        "title": {
+            "type": "string"
+        },
+        "url": {
+            "type": "string"
+        },
+        "thumbnailUrl": {
+            "type": "string"
+        }
+    }
+}
