@@ -28,7 +28,7 @@ test.describe("Validating API response", ()=>{
                     const isValid= validateOne(responseBody);
 
                     expect(isValid).toBe(true);
-                    // expect(isValid, `Schema error: ${JSON.stringify(validateOne.errors, null, 2)}`).toBe(true);
+                    expect(isValid, `Schema error: ${JSON.stringify(validateOne.errors, null, 2)}`).toBe(true);
                 })
             }
         });
