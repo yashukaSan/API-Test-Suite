@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import * as allPostSchema from '../../src/schemas/jsonplaceholder/all-posts.schema.json';
-import * as singlePostSchema from '../../src/schemas/jsonplaceholder/singlepost.schema.json';
+import * as singlePostSchema from '../../src/schemas/jsonplaceholder/single-post.schema.json';
 import { test, expect } from '@playwright/test';
 
 const ajv = new Ajv();
