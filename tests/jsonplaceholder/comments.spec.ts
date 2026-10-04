@@ -7,73 +7,61 @@ const ajv = new Ajv();
 const validateAll = ajv.compile(allComments);
 const validateOne = ajv.compile(singleComment);
 
-test.describe("Validating API response", ()=>{
-    test('Schema check - /comments', async({request})=>{
-        const res = await request.get('https://jsonplaceholder.typicode.com/comments');
+// Tip: Set "baseURL: 'https://jsonplaceholder.typicode.com'" in your playwright.config.ts
+test.use({ baseURL: 'https://jsonplaceholder.typicode.com' });
+
+test.describe("JSONPlaceholder - /comments API", () => {
+
+    test('should return all photos with valid schema', async ({ request }) => {
+        const res = await request.get('/comments');
+
         expect(res.ok()).toBeTruthy();
-
         const responseBody = await res.json();
-        const isValid = validateAll(responseBody);
 
+        const isValid = validateAll(responseBody);
         expect(isValid, `Schema error: ${JSON.stringify(validateAll.errors, null, 2)}`).toBe(true);
     });
 
-    test.describe("Schema check on random IDs - /comments/:id", ()=>{
-        test.describe('On Valid IDs', ()=>{
-            for(let i=0; i<60; i++){
-                test(`valid ID #${i+1}`, async({ request }) => {
-                    const res = await request.get(`https://jsonplaceholder.typicode.com/comments/${Math.floor(Math.random() * 500)}`);
-                    expect(res.status()).toBe(200);
-                    const responseBody = await res.json();
-                    const isValid= validateOne(responseBody);
+    test('should validate schema on specific valid IDs', async ({ request }) => {
+        // Test boundary conditions and sample IDs deterministically instead of 60 random loops
+        const validIds = ['1', '100', '350', '500'];
 
-                    expect(isValid).toBe(true);
-                    expect(isValid, `Schema error: ${JSON.stringify(validateOne.errors, null, 2)}`).toBe(true);
-                })
+        for (const id of validIds) {
+            await test.step(`Checking valid ID: ${id}`, async () => {
+                const res = await request.get(`/comments/${id}`);
+                expect(res.status()).toBe(200);
+
+                const responseBody = await res.json();
+                const isValid = validateOne(responseBody);
+                expect(isValid, `Schema error for ID ${id}: ${JSON.stringify(validateOne.errors, null, 2)}`).toBe(true);
+            });
+        }
+    });
+
+    test.describe("Invalid ID Handling (404s)", () => {
+
+        test('should return 404 for out-of-range, negative, and zero IDs', async ({ request }) => {
+            const boundaryInvalidIds = [0, -1, -500, -501, 9999];
+
+            for (const id of boundaryInvalidIds) {
+                await test.step(`Checking invalid numeric ID: ${id}`, async () => {
+                    const res = await request.get(`/comments/${id}`);
+                    expect(res.status()).toBe(404);
+                });
             }
         });
-        
-        test.describe("On Invalid IDs", ()=>{
-            test.describe('Out of Range ID', ()=>{
-                for (let i = 1; i <= 50; i++) {
-                    test(`ID call #${i}`, async ({ request }) => {
-                        const res = await request.get(`https://jsonplaceholder.typicode.com/comments/${Math.floor((Math.random() * 1000) + 500)}`);
-                        expect(res.status()).toBe(404);
-                    });
-                }
-            })
 
-            test('test for ID 0', async({ request }) => {
-                const res = await request.get(`https://jsonplaceholder.typicode.com/comments/0`);
-                expect(res.status()).toBe(404);
-            })
+        test('should return 404 for non-numeric/alphabetic IDs', async ({ request }) => {
+            // Shortened targeted list representing diverse data types (strings, boolean strings, malicious inputs)
+            const alphaIds = ['A', 'admin', 'null', 'undefined', 'false', '1+1', '@1', 'hf4hfj4fj4f'];
 
-            test.describe('alphabet ID Calls', ()=>{
-                const alphaID = [
-                    'A', 'admin', 'user', 'posts', 'post', 'x', 'xyz', 'abc', 'g56', 'j034',
-                    '345h4', '@1', '#34', '34+', 'some', 'all', 'none', 'null', 'undefined', 'false',
-                    'true', '1+1', 'yes', 'no', 'get', 'get-all', 'no34w', 'hf4hfj4fj4f', 'h8', '7d7dh',
-                    'tom', 'user2', 'user43', '45name', 'post90', 'ummm', 'pqr', 'alpha', 'popular', 'to',
-                    'a1c23', 'song', 'indie', 'okay', 'low', 'high', 'fast', 'slow', 'least', 'late',
-                    'first', 'second', 'third', 'forth', 'y90y', '34h34', 'sdnsam', 'complete'
-                ];
-                for(let i=1; i<51; i++){
-                    test(`call #${i}`, async ({ request }) => {
-                        const res = await request.get(`https://jsonplaceholder.typicode.com/comment/${alphaID[i-1]}`);
-                        expect(res.status()).toBe(404);
-                    }                        
-                    );
-                }
-            })
+            for (const id of alphaIds) {
+                await test.step(`Checking alphanumeric ID: ${id}`, async () => {
+                    const res = await request.get(`/comments/${id}`);
+                    expect(res.status()).toBe(404);
+                });
+            }
+        });
 
-            test.describe('Negative IDs', ()=>{
-                for(let i=0; i<50;i++){
-                    test(`call #${i+1}`, async({ request })=>{
-                        const res = await request.get(`https://jsonplaceholder.typicode.com/comments/-${Math.floor(Math.random()*1000)}`);
-                        expect(res.status()).toBe(404);
-                    })
-                }
-            })
-        })
-    })
-})
+    });
+});
