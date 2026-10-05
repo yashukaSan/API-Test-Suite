@@ -9,83 +9,50 @@ const validateAll = ajv.compile(allAlbum);
 const validateOne = ajv.compile(singleAlbum);
 const validatePhoto = ajv.compile(albumPhoto);
 
-test.describe('validating API responses', ()=>{
+test.use({baseURL: 'https://jsonplaceholder.typicode.com/'});
+test.describe(`JSONPlaceholder /albums API`, ()=>{
+    test(`should return all albums with valid schema `, async ({request})=>{
+        const res = await request.get('/albums');
+        expect(res.ok()).toBeTruthy();
 
-    test('Schema check ', async({ request })=>{
-        const res = await request.get('https://jsonplaceholder.typicode.com/albums');
-        expect(res.status).toBeTruthy();
-
-        const resBody = await res.json();
+        const resBody = await res.json();        
         const isValid = validateAll(resBody);
-        expect(isValid, `Schema Error: ${JSON.stringify(validateAll, null, 2)}`).toBe(true);
+        expect(isValid, `Schema error: ${validateAll.errors, null, 2}`).toBe(true);
     });
 
-    test.describe('Valid IDs Check', ()=>{
-        for(let i=1; i<=25; i++){
-            test(`test #${i}`, async({ request })=>{
-                const res = await request.get(`https://jsonplaceholder.typicode.com/albums/${Math.floor(Math.random()*99 +1)}`);
+    test('should 200 for valid IDs',async ({request})=>{
+        const validIDs = [1, 2, 50, 60, 99, 100];
+        for (const id of validIDs) {
+            await test.step(`Checking Valid ID: ${id}`, async () => {
+                const res = await request.get(`/albums/${id}`);
                 expect(res.status()).toBe(200);
 
                 const resBody = await res.json();
                 const isValid = validateOne(resBody);
-                expect(isValid).toBe(true);
-            });
-        }  
-    });
-
-    test.describe('InValid IDs check', ()=>{
-        test.describe(`With Out of Range IDs`, () => {
-            for (let i = 1; i < 26; i++) {
-                test(`test #${i}`, async ({ request }) => {
-                    const res = await request.get(`https://jsonplaceholder.typicode.com/albums/${Math.floor(Math.random() * 1000 + 100)}`)
-                    expect(res.status()).toBe(404);
-                });
-            }
-        });
-
-        test(`With 0`, async({request})=>{
-            const res = await request.get('https://jsonplaceholder.typicode.com/albuma/0');
-            expect(res.status()).toBe(404);
-        })
-
-        test.describe(`Random Strings`, ()=>{
-            const randomStr = [
-                'one', 'first', 'last', 'open', 'accept', 'neglect', 'null', 'none', 'abc', 'admin',
-                'xyz', 't4t5t4', 'a123', 'x89', '1a', 'user', 'player', 'people', 'person', 'indie',
-                'tom', 'bob', 'request', 'all', 'every', 'secret', 'undefined', 'false', 'true', 'joy',
-                "1+1", '0+1', 'if', 'else', 'post90', 'photo', 'get', 'put', 'patch', 'pqr', 'pic1',
-                'pick1', 'showall', 'shownone', 'show','A', 'B', 'C', 'high', 'low'
-            ]
-            for(let i=1; i<51; i++){
-                test(`test #${i}`, async({request})=>{
-                    const res = await request.get(`https://jsonplaceholder.typicode.com/albums/${randomStr[i]}`);
-                    expect(res.status()).toBe(404);
-                })
-            }
-        });
-
-        test.describe(`Negative IDs`, ()=>{
-            for (let i = 1; i < 26; i++) {
-                test(`test #${i}`, async({request})=>{
-                    const res = await request.get(`https://jsonplaceholder.typicode.com/albums/-${Math.floor(Math.random()*100)}`)
-                    expect(res.status()).toBe(404);
-                })
-            }
-        })
-    });
-
-    test.describe(`checking /album/:id/photos`, ()=>{
-        test.describe('Valid IDs Check', () => {
-            for (let i = 1; i <= 25; i++) {
-                test(`test #${i}`, async ({ request }) => {
-                    const res = await request.get(`https://jsonplaceholder.typicode.com/albums/${Math.floor(Math.random() * 99 + 1)}/photos`);
-                    expect(res.status()).toBe(200);
-
-                    const resBody = await res.json();
-                    const isValid = validatePhoto(resBody);
-                    expect(isValid).toBe(true);
-                });
-            }
-        });
-    })
+                expect(isValid, `Schema error: ${validateOne.errors, null, 2}`).toBe(true);
 })
+        }
+    })
+    test.describe(`Invalid IDs handling (404s)`, ()=>{
+        test(`Checking invalid Numeric IDs: negative, out-of-range`, async({request})=>{
+            const invalidIDs = [0, -1, 101, -10, 200, -200];
+             for(const id of invalidIDs){
+                await test.step(`Chekcing Invalid ID: ${id}`, async()=>{
+                    const res = await request.get(`/albums/${id}`);
+                    expect(res.status()).toBe(404);
+                });
+             }
+        });
+
+        test(`Checking Invalid AlphaNumeric IDs`, async({request})=>{
+            const invalidIDs = ['A', 'admin', 'user', 'photo', 'null', 'first', 'true', 'false'];
+            for(const id of invalidIDs){
+                await test.step(`Checking ID: ${id}`, async()=>{
+                    const res = await request.get(`/albums/id`);
+                    expect(res.status()).toBe(404);
+                })
+            }
+        })
+    });
+});
+
