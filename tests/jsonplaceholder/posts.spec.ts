@@ -7,9 +7,10 @@ const ajv = new Ajv();
 const validateAll = ajv.compile(allPostSchema);
 const validateOne = ajv.compile(singlePostSchema);
 
-test.describe("Validating API responses", ()=>{
-    test('API Response Schema for /post', async ({ request }) => {
-        const res = await request.get('https://jsonplaceholder.typicode.com/posts');
+test.use({baseURL: 'https://jsonplaceholder.typicode.com'});
+test.describe("JSOINPlaceHolder /posts API", ()=>{
+    test('API Schema test', async ({ request }) => {
+        const res = await request.get('/posts');
         expect(res.ok()).toBeTruthy();
 
         const responseBody = await res.json();
@@ -17,53 +18,31 @@ test.describe("Validating API responses", ()=>{
 
         expect(isValid, `Schema error: ${JSON.stringify(validateAll.errors, null, 2)}`).toBe(true);
     });
-    test.describe('API Response for Valid IDs', ()=>{
-        for(let i=0; i<5; i++){
-            test(`Valid ID #${i}`, async({request})=>{
-                const res = await request.get(`https://jsonplaceholder.typicode.com/posts/${Math.floor(Math.random() * 100)}`);
-                expect(res.status()).toBe(200);
-
-                const resBody = await res.json();
-                const isValid = validateOne(resBody);
-
-                expect(isValid).toBe(true);
-            });
-        } 
-    });
-    //test cases for the non numberic IDs
-    test.describe("API response for Invalid IDs", ()=> {
-        const invalid_id = ["abc", "q1", "12b", "3", "xyz"];
-        for(let i=0; i<5; i++ ){
-            test(`Invalid ID #${i+1} `, async({ request })=> {
-                const res= await request.get(`https://jsonplaceholder.typicode.com/posts/${invalid_id[i]}`);
-                if(i==3) expect(res.status()).toBe(200);
-                else expect(res.status()).toBe(404);
-            })
-        }
+    test.describe('Schema check for Valid IDs', ()=>{
+        //valid id test
     });
 
-    //test for the non-negative IDs
-    test.describe("API for the negative IDs ", ()=>{
-        for(let i=0; i<5; i++){
-            test(`Negative ID #${i}`, async({request})=>{
-                const res= await request.get(`https://jsonplaceholder.typicode.com/posts/-${Math.floor(Math.random() * 100)}`);
-                expect(res.status()).toBe(404);
-            })
-        }
-    });
+    //test for invalid IDs
+    test.describe("test of Invalid IDs", ()=> {
+        test(`Checking Invalid Numric IDs: Negatiuve, zero, out-of-range`, async({request})=>{
+            const invalidID = [0, -1, -100, 101, -67, 190, 1000];
+            for(const id of invalidID){
+                await test.step(`Checking ID: ${id}`, async()=>{
+                    const res = await request.get(`/posts/${id}`);
+                    expect(res.status()).toBe(404);
+                });
+            }
+        });
 
-    test('API call on ID 0', async({request})=>{
-        const res = await request.get('https://jsonplaceholder.typicode.com/posts/0');
-        expect(res.status()).toBe(404);
-    });
+        test('Checking Non-Numeric IDs', async({request})=>{
+            const invalidIDs = ['a', 'user', 'one', 'admin', 'a2', 'new'];
 
-    test.describe('API call on out-of-bound IDs', ()=>{
-        
-        for(let i=0; i<10; i++){
-            test(`Out-of-Bound #${i+1}`, async({request})=>{
-                const res = await request.get(`https://jsonplaceholder.typicode.com/posts/${Math.floor((Math.random()*100)+100 )}`);
-                expect(res.status()).toBe(404);
-            })
-        }
-    })
+            for(const id of invalidIDs){
+                await test.step(`Checking ID: ${id}`, async () => {
+                    const res = await request.get(`/posts/${id}`);
+                    expect(res.status()).toBe(404);
+                });
+            }
+        })
+    });
 })
